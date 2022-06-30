@@ -11,7 +11,7 @@ from sqlalchemy import create_engine, func
 from flask import Flask, jsonify
 
 # Create function allows access to SQLite database file
-enigne = create_engine("sqlite:///hawaii.sqlite")
+engine = create_engine("sqlite:///hawaii.sqlite")
 # Reflect Database into classes
 Base = automap_base()
 # Reflect tables
@@ -20,7 +20,7 @@ Base.prepare(engine, reflect=True)
 Measurement = Base.classes.measurement
 Station = Base.classes.station
 # Create sesssion link from Python to SQLite database
-session= Session(enigne)
+session= Session(engine)
 # Create a Flask application called "app"
 app = Flask(__name__)
 
@@ -37,3 +37,19 @@ def welcome():
     /api/v1.0/tobs
     /api/v1.0/temp/start/end
     ''')
+
+# Build route for precipitation analysis
+@app.route("/api/v1.0/precipitation")
+# Create the function
+def precipitation():
+    prev_year = dt.date(2017, 8, 23) - dt.timedelta(days=365)
+    precipitation = session.query(Measurement.date, Measurement.prcp).\
+        filter(Measurement.date >= prev_year).all()
+    precip = {date: prcp for date, prcp in precipitation}
+    return jsonify(precip)
+
+
+
+
+if __name__ == '__main__':
+    app.run()
